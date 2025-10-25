@@ -37,7 +37,6 @@ wandb/
 spectrograms_224/
 spectrograms_split_224/
 ESC-50-organized/
-audio/
 
 # OS files
 .DS_Store
