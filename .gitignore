@@ -1,0 +1,53 @@
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+
+# Virtual environments
+venv/
+env/
+.venv/
+.env
+
+# PyTorch / model checkpoints
+*.pth
+*.pt
+*.ckpt
+*.ckp
+*.h5
+models/
+final_*/
+model_final.pth
+
+# Numpy / data arrays
+*.npy
+*.npz
+
+# Results / outputs / logs
+results_*
+results*/
+outputs/
+logs/
+tensorboard_logs/
+runs/
+wandb/
+
+# Data folders (generated spectrograms / large assets)
+spectrograms_224/
+spectrograms_split_224/
+ESC-50-organized/
+audio/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE / editors
+.vscode/
+.idea/
+
+# Misc
+*.log
+*.tmp
+~$*
