@@ -35,7 +35,6 @@ wandb/
 
 # Data folders (generated spectrograms / large assets)
 spectrograms_224/
-spectrograms_split_224/
 ESC-50-organized/
 
 # OS files
