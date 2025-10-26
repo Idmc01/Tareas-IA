@@ -1,0 +1,56 @@
+                  precision    recall  f1-score   support
+
+        airplane     0.3333    0.1667    0.2222         6
+       breathing     0.5000    0.5000    0.5000         6
+  brushing_teeth     1.0000    0.5000    0.6667         6
+     can_opening     0.8333    0.8333    0.8333         6
+        car_horn     0.2500    0.5000    0.3333         6
+             cat     0.5000    0.6667    0.5714         6
+        chainsaw     0.6667    0.6667    0.6667         6
+  chirping_birds     0.5000    0.5000    0.5000         6
+    church_bells     0.6000    0.5000    0.5455         6
+        clapping     0.5556    0.8333    0.6667         6
+     clock_alarm     1.0000    0.8333    0.9091         6
+      clock_tick     0.4000    0.3333    0.3636         6
+        coughing     1.0000    0.6667    0.8000         6
+             cow     0.6000    0.5000    0.5455         6
+  crackling_fire     0.4444    0.6667    0.5333         6
+        crickets     1.0000    1.0000    1.0000         6
+            crow     0.8333    0.8333    0.8333         6
+     crying_baby     0.5000    0.8333    0.6250         6
+             dog     0.4286    0.5000    0.4615         6
+door_wood_creaks     0.3333    0.1667    0.2222         6
+ door_wood_knock     0.5714    0.6667    0.6154         6
+drinking_sipping     0.4000    0.3333    0.3636         6
+          engine     0.6667    0.3333    0.4444         6
+       fireworks     0.1667    0.1667    0.1667         6
+       footsteps     0.3750    0.5000    0.4286         6
+            frog     0.6667    0.3333    0.4444         6
+  glass_breaking     1.0000    0.8333    0.9091         6
+        hand_saw     0.6250    0.8333    0.7143         6
+      helicopter     0.6667    0.3333    0.4444         6
+             hen     0.3750    0.5000    0.4286         6
+         insects     0.5000    0.3333    0.4000         6
+ keyboard_typing     1.0000    0.1667    0.2857         6
+        laughing     0.4000    0.3333    0.3636         6
+     mouse_click     0.3750    0.5000    0.4286         6
+             pig     0.5556    0.8333    0.6667         6
+   pouring_water     1.0000    0.5000    0.6667         6
+            rain     0.5000    1.0000    0.6667         6
+         rooster     0.8333    0.8333    0.8333         6
+       sea_waves     0.7500    0.5000    0.6000         6
+           sheep     0.7143    0.8333    0.7692         6
+           siren     0.6000    0.5000    0.5455         6
+        sneezing     0.6250    0.8333    0.7143         6
+         snoring     0.5000    0.6667    0.5714         6
+    thunderstorm     0.8571    1.0000    0.9231         6
+    toilet_flush     0.8333    0.8333    0.8333         6
+           train     0.5714    0.6667    0.6154         6
+  vacuum_cleaner     0.6000    0.5000    0.5455         6
+ washing_machine     0.2500    0.1667    0.2000         6
+     water_drops     0.5000    0.1667    0.2500         6
+            wind     0.4444    0.6667    0.5333         6
+
+        accuracy                         0.5733       300
+       macro avg     0.6040    0.5733    0.5634       300
+    weighted avg     0.6040    0.5733    0.5634       300
