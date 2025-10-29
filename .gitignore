@@ -63,10 +63,3 @@ tb_logs/
 # Keep .gitkeep files if present (use them to preserve empty folders)
 !.gitkeep
 
-# Optional: if you DO want to version audio/ or meta/ directories, remove or comment out the lines above
-# that ignore spectrograms_224/ or ESC-50-organized/ etc. Be careful with large data.
-
-# Note: Git does not track empty folders. To prevent accidental deletion of an important
-# directory that may be empty on some machines, place a file named `.gitkeep` (or README) inside
-# and commit that file. Example to add .gitkeep to a folder:
-#   New-Item -Path .\spectrograms_split_224\train -ItemType Directory -Force; New-Item .\spectrograms_split_224\train\.gitkeep -ItemType File
