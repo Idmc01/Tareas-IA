@@ -1,11 +1,29 @@
+import os
 import streamlit as st
 from openai import OpenAI
+from tools.web_search import search_web
 
+#----- intentar cargar .env
+try:
+    from dotenv import load_dotenv, find_dotenv
+    load_dotenv(find_dotenv())
+except Exception:
+    print("No se pudo cargar el archivo .env!")
+
+#----- Configuración de la página
 st.set_page_config(page_title="Agente IA", page_icon="")
 st.title("Asistente de Inteligencia Artificial - TEC")
 
-client = OpenAI(api_key="", base_url="https://api.openai.com/v1")
+#----- leer API_KEY desde .env
+API_KEY = os.getenv("API_KEY")
+if not API_KEY:
+    st.sidebar.error("Falta API_KEY!")
+    st.stop()
 
+client = OpenAI(api_key=API_KEY, base_url="https://api.openai.com/v1")
+
+
+#----- probar conexión con OpenAI
 try:
     models = client.models.list()
     st.sidebar.success("Conexión con OpenAI establecida")
@@ -13,6 +31,7 @@ except Exception as e:
     st.sidebar.error(f"Error de conexión: {str(e)}")
     st.stop()
 
+#----- prompt del sistema
 SYSTEM_PROMPT = """
 Eres un asistente académico llamado AIDA, especializado en Inteligencia Artificial.
 Tu tarea es responder preguntas sobre Inteligencia Artificial y temas relacionados.
@@ -20,45 +39,90 @@ Debes responder siempre de manera clara y con tono docente.
 Si no tienes información suficiente para responder una pregunta, indícalo honestamente.
 """
 
+#----- Inicializar estado de la sesión
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
+#----- MOVER LOS CONTROLES A LA SIDEBAR
+st.sidebar.markdown("---")
+st.sidebar.subheader("Configuración de Búsqueda Web")
+use_web = st.sidebar.checkbox("Buscar en la web antes de responder", value=False)
+web_limit = st.sidebar.slider("Número de resultados web", min_value=1, max_value=10, value=3)
+
+#----- Mostrar mensajes anteriores
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+#----- Input del usuario
 user_input = st.chat_input("Escribe tu pregunta...")
 
 if user_input:
+    # Mostrar mensaje del usuario
+    st.chat_message("user").markdown(user_input)
+    st.session_state.messages.append({"role": "user", "content": user_input})
+
+    web_context = None
+    
+    # Buscar en la web si está activado
+    if use_web:
+        try:
+            with st.spinner("Buscando en la web..."):
+                results = search_web(user_input, limit=web_limit)
+        except RuntimeError as e:
+            st.warning(str(e))
+            results = []
+        except Exception as e:
+            st.error(f"Error buscando en la web: {e}")
+            results = []
+
+        # Mostrar resultados
+        if not results:
+            st.info("No se encontraron resultados en la web para la consulta.")
+        else:
+            with st.expander("Resultados de la búsqueda web", expanded=True):
+                for i, r in enumerate(results, start=1):
+                    st.markdown(f"**{i}. {r.get('title', 'Sin título')}**")
+                    if r.get('snippet'):
+                        st.markdown(r.get('snippet'))
+                    if r.get('url'):
+                        st.markdown(f"[{r.get('url')}]({r.get('url')})")
+                    st.markdown("---")
+
+            # Construir contexto para el modelo
+            lines = []
+            for i, r in enumerate(results, start=1):
+                title = r.get('title', '')
+                snippet = r.get('snippet', '')
+                url = r.get('url', '')
+                lines.append(f"{i}. {title}\n{snippet}\nFuente: {url}\n")
+            web_context = "\n".join(lines)
+
+    # Construir mensajes del chat
+    chat_messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+    
+    if web_context:
+        chat_messages.append({
+            "role": "system",
+            "content": "Información obtenida en la web (usar como referencia y citar fuentes cuando sea posible):\n\n" + web_context,
+        })
+
+    chat_messages += st.session_state.messages
+
+    # generar respuesta
     try:
-        st.chat_message("user").markdown(user_input)
-        st.session_state.messages.append({"role": "user", "content": user_input})
+        with st.chat_message("assistant"):
+            with st.spinner("Pensando..."):
+                chat_completion = client.chat.completions.create(
+                    model="gpt-3.5-turbo-0125",
+                    messages=chat_messages
+                )
 
-        chat_messages = [{"role": "system", "content": SYSTEM_PROMPT}] + list(st.session_state.messages)
-
-        chat_completion = client.chat.completions.create(model="gpt-3.5-turbo-0125", messages=chat_messages)
-
-        response_content = chat_completion.choices[0].message.content
-        st.chat_message("assistant").markdown(response_content)
-        st.session_state.messages.append({"role": "assistant", "content": response_content})
+                response_content = chat_completion.choices[0].message.content
+                st.markdown(response_content)
+                st.session_state.messages.append({"role": "assistant", "content": response_content})
 
     except Exception as e:
-        st.error(f"Error: {str(e)}")
-    try:
-        st.chat_message("user").markdown(user_input)
-        st.session_state.messages.append({"role": "user", "content": user_input})
-
-        #Construir la lista de mensajes incluyendo el historial en st.session_state
-        chat_messages = [{"role": "system", "content": SYSTEM_PROMPT}] + list(st.session_state.messages)
-
-        chat_completion = client.chat.completions.create(
-            model="gpt-3.5-turbo-0125",
-            messages=chat_messages
-        )
-        
-        response_content = chat_completion.choices[0].message.content
-        st.chat_message("assistant").markdown(response_content)
-        st.session_state.messages.append({"role": "assistant", "content": response_content})
-
-    except Exception as e:
-        st.error(f"Error: {str(e)}")
+        st.error(f"Error generando respuesta: {str(e)}")
