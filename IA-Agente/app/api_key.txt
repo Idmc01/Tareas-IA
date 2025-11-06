@@ -1,1 +1,0 @@
-Set-Content -Path .\api_key.txt -Value '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'
