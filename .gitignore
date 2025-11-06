@@ -49,3 +49,16 @@ Thumbs.db
 *.log
 *.tmp
 ~$*
+
+# Notebook checkpoints
+.ipynb_checkpoints/
+
+# Caches
+.cache/
+.pytest_cache/
+.mypy_cache/
+
+# Python build artifacts
+*.egg-info/
+dist/
+build/
