@@ -4,7 +4,7 @@ from openai import OpenAI
 st.set_page_config(page_title="Agente IA", page_icon="")
 st.title("Asistente de Inteligencia Artificial - TEC")
 
-client = OpenAI(api_key="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", base_url="https://api.openai.com/v1")
+client = OpenAI(api_key="", base_url="https://api.openai.com/v1")
 
 try:
     models = client.models.list()
