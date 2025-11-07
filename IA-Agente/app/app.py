@@ -43,6 +43,36 @@ Debes responder siempre de manera clara y con tono docente.
 Si no tienes información suficiente para responder una pregunta, indícalo honestamente.
 """
 
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+#----- Función para limpiar query de búsqueda
+def clean_search_query(query: str) -> str:
+    # Limpia la query removiendo palabras comunes que no aportan a la búsqueda
+    stopwords = [
+        'dame', 'dime', 'que es', 'qué es', 'cual es', 'cuál es', 'como es', 'cómo es',
+        'cuales son', 'cuáles son', 'como son', 'cómo son', 'me puedes', 'puedes',
+        'explicame', 'explícame', 'explica', 'dime sobre', 'dame información',
+        'quiero saber', 'necesito saber', 'me gustaría', 'quisiera',
+        'por favor', 'gracias', 'hola', 'ayudame', 'ayúdame'
+    ]
+    
+    query_lower = query.lower()
+    cleaned = query
+    
+    #remove stopwords
+    for word in stopwords:
+        #buscar al inicio de la frase
+        if query_lower.startswith(word + ' '):
+            cleaned = query[len(word):].strip()
+            query_lower = cleaned.lower()
+        #buscar en cualquier parte con espacios alrededor
+        cleaned = ' '.join([w for w in cleaned.split() if w.lower() not in word.split()])
+    
+    # ESTO SE PUEDE ACTIVAR O NO 
+    #if len(cleaned.strip()) < 3: #si queda muy corto -> usar original
+     #   return query
+    
+    return cleaned.strip()
+
 #----- Inicializar estado de la sesión
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -83,6 +113,9 @@ for msg in st.session_state.messages:
 
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+#CONFIGURACION DEL WEB TOOL
+max_recent_web_context = 3  # número máximo de interacciones recientes para contexto web
+
 #----- Input del usuario
 user_input = st.chat_input("Escribe tu pregunta...")
 
@@ -115,9 +148,25 @@ if user_input:
 
     # Buscar en la web si está activado
     if use_web:
+        # construir query contextualizada -> si hay historial web reciente -> agregar contexto
+        search_query = user_input
+        if len(st.session_state.messages) >= max_recent_web_context:
+            # tomar los últimos 2 mensajes del usuario para contexto
+            recent_context = []
+            for msg in st.session_state.messages[-(max_recent_web_context*2):]:  # ultimos mensajes (2 pares usuario-asistente)
+                if msg["role"] == "user":
+                    recent_context.append(msg["content"])
+            
+            if recent_context:
+                # combinar contexto reciente con la pregunta actual
+                search_query = f"{' '.join(recent_context[-max_recent_web_context:])} {user_input}" #ESTO HACE QUE SE DUPLIQUE LA ULTIMA PREGUNTA EN LA BUSQUEDA WEB, NO HAY MUCHO PROBLEMA
+        
+        # Limpiar la query removiendo palabras innecesarias
+        cleaned_query = clean_search_query(search_query)
+        
         try:
-            with st.spinner("Buscando en la web..."):
-                results = search_web(user_input, limit=web_limit)
+            with st.spinner(f"Buscando: '{cleaned_query[:60]}...'"):
+                results = search_web(cleaned_query, limit=web_limit)
         except RuntimeError as e:
             st.warning(str(e))
             results = []
@@ -125,11 +174,14 @@ if user_input:
             st.error(f"Error buscando en la web: {e}")
             results = []
 
-        # Mostrar resultados web
+        # mostrar resultados
         if not results:
             st.info("No se encontraron resultados en la web para la consulta.")
         else:
-            with st.expander("Resultados de la búsqueda web", expanded=False):
+            # mostrar el query limpio que se usó
+            expander_title = f"Resultados de búsqueda: '{cleaned_query[:50]}...'"
+            
+            with st.expander(expander_title, expanded=True):
                 for i, r in enumerate(results, start=1):
                     st.markdown(f"**{i}. {r.get('title', 'Sin título')}**")
                     if r.get('snippet'):
@@ -161,11 +213,14 @@ if user_input:
         })
 
     if web_context:
-        chat_messages.append({
+        web_message = f"[Información de búsqueda web para tu consulta]\n\n{web_context}"
+        st.session_state.messages.append({
             "role": "system",
-            "content": "Información obtenida en la web (usar como referencia y citar fuentes cuando sea posible):\n\n" + web_context,
+            "content": web_message
         })
-
+    
+    # Construir mensajes del chat
+    chat_messages = [{"role": "system", "content": SYSTEM_PROMPT}]
     chat_messages += st.session_state.messages
 
     # generar respuesta
