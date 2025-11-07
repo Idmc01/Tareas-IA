@@ -1,0 +1,30 @@
+{
+  "index_type": "IndexFlatIP",
+  "dimension": 1536,
+  "total_vectors": 988,
+  "model": "text-embedding-3-small",
+  "chunking_method": "recursive text splitter",
+  "chunk_size": 1000,
+  "overlap": 200,
+  "separators": [
+    "\n\n",
+    "\n",
+    ". ",
+    "; ",
+    ", ",
+    " "
+  ],
+  "normalized": true,
+  "columns": [
+    "fuente",
+    "semana",
+    "fecha",
+    "apunte",
+    "titulo",
+    "autor",
+    "chunk_id",
+    "chunk_text",
+    "chunk_len"
+  ],
+  "created_at": "2025-11-06T01:26:23.272140"
+}
