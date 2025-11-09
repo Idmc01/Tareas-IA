@@ -5,17 +5,16 @@ import pandas as pd
 import faiss
 from typing import List, Dict, Tuple
 from openai import OpenAI
+from pathlib import Path
 
-# Utilidades de ruta del proyecto (RAG)
 def get_project_paths() -> Tuple[str, str, str]:
-    # Buscar siempre desde la raíz del proyecto principal
-    # (donde están las carpetas 'vectordb' y 'data')
-    # Suponemos que IA-Agente está dentro de Tarea-1-IA
-    base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
-    data_dir = os.path.join(base_dir, "data")
-    vectordb_dir = os.path.join(base_dir, "vectordb")
-    return base_dir, data_dir, vectordb_dir
-
+    #Detecta la raíz del proyecto buscando 'vectordb' o 'data' hacia arriba
+    here = Path(__file__).resolve()
+    for parent in here.parents:
+        if (parent / "vectordb").exists() or (parent / "data").exists():
+            return str(parent), str(parent / "data"), str(parent / "vectordb")
+    fallback = here.parent.parent.parent
+    return str(fallback), str(fallback / "data"), str(fallback / "vectordb")
 
 def load_index_and_df(strategy: str):
     """Carga el índice FAISS y el DataFrame de chunks según la estrategia.

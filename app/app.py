@@ -1,10 +1,11 @@
 import os
 import streamlit as st
 from openai import OpenAI
-from tools.web_search import search_web
 from typing import List, Dict
+from pathlib import Path
 
-from tools.rag import load_index_and_df, retrieve_from_index
+from rag_tool import load_index_and_df, retrieve_from_index
+from web_tool import search_web
 
 try:
     from dotenv import load_dotenv, find_dotenv
@@ -13,17 +14,17 @@ except Exception:
     print("No se pudo cargar el archivo .env!")
 
 
+# conf de pag
 st.set_page_config(page_title="Agente IA", page_icon="")
 st.title("ChatMMI")
 
-API_KEY = os.getenv("API_KEY")
+# api_key
+API_KEY = os.getenv("OPENAI_API_KEY")
 if not API_KEY:
-    st.sidebar.error("Falta API_KEY!")
+    st.sidebar.error("Falta API_KEY")
     st.stop()
 
 client = OpenAI(api_key=API_KEY, base_url="https://api.openai.com/v1")
-
-
 try:
     models = client.models.list()
     st.sidebar.success("Conexión con OpenAI establecida")
@@ -44,8 +45,7 @@ manteniendo siempre la precisión y el tono académico.
 No debes utilizar herramientas de búsqueda en internet ni consultar fuentes externas,
 a menos que el usuario lo solicite de forma explícita.
 """
-
-
+import re
 def clean_search_query(query: str) -> str:
     # Limpia la query removiendo palabras comunes que no aportan a la búsqueda
     stopwords = [
@@ -53,27 +53,38 @@ def clean_search_query(query: str) -> str:
         'cuales son', 'cuáles son', 'como son', 'cómo son', 'me puedes', 'puedes',
         'explicame', 'explícame', 'explica', 'dime sobre', 'dame información',
         'quiero saber', 'necesito saber', 'me gustaría', 'quisiera',
-        'por favor', 'gracias', 'hola', 'ayudame', 'ayúdame'
+        'por favor', 'gracias', 'hola', 'ayudame', 'ayúdame', "quien es", "quien fue", "quién es", "quién fue", 
+        "¿", 'que','qué','cual','cuál','cuales','cuáles','cuando','cuándo','donde',
+        'dónde','por que','por qué','porque','para que','para qué','como','cómo',
+        'quien','quién','quienes','quiénes','cuanto','cuánto','cuantos','cuántos',
+        'cuanta','cuánta','cuantas','cuántas','si puedes','si pudieras','si fuese posible','seria posible',
+        'sería posible','te agradecería','agradeceria','agradecería','gracias',
+        'muchas gracias','hola','buenas','buenas tardes','buenas noches','buen día',
+        'buenos dias','buenos días','saludos','estimado','dias','días','noches',"tardes",
+        'estimado','queria','quería','quisiera saber','me gustaria saber',
+        'me gustaría saber','podrias explicar','podrías explicar',
+        'podrias decirme','podrías decirme','podrias darme','podrías darme','ahora','busca'
     ]
-    
+
     query_lower = query.lower()
     cleaned = query
-    
-    #remove stopwords
-    for word in stopwords:
-        #buscar al inicio de la frase
-        if query_lower.startswith(word + ' '):
-            cleaned = query[len(word):].strip()
-            query_lower = cleaned.lower()
-        #buscar en cualquier parte con espacios alrededor
-        cleaned = ' '.join([w for w in cleaned.split() if w.lower() not in word.split()])
-    
-    # ESTO SE PUEDE ACTIVAR O NO 
-    #if len(cleaned.strip()) < 3: #si queda muy corto -> usar original
-     #   return query
-    
-    return cleaned.strip()
 
+    #remove stopwords
+    # eliminar todas las frases stop sin importar posición
+    for phrase in stopwords:
+        # usa regex para eliminar la frase completa 
+        pattern = r'\b' + re.escape(phrase) + r'\b'
+        cleaned = re.sub(pattern, '', cleaned)
+
+    # eliminar espacios duplicados o basura
+    cleaned = re.sub(r'\s+', ' ', cleaned).strip()
+
+
+    # ESTO SE PUEDE ACTIVAR O NO 
+    #if len(cleaned) < 3: #si queda muy corto -> usar original
+     #   return query
+
+    return cleaned
 #Inicializar estado de la sesión
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -156,14 +167,14 @@ if user_input:
             for msg in st.session_state.messages[-(max_recent_web_context*2):]:  # ultimos mensajes (2 pares usuario-asistente)
                 if msg["role"] == "user":
                     recent_context.append(msg["content"])
-            
+
             if recent_context:
                 # combinar contexto reciente con la pregunta actual
                 search_query = f"{' '.join(recent_context[-max_recent_web_context:])} {user_input}" #ESTO HACE QUE SE DUPLIQUE LA ULTIMA PREGUNTA EN LA BUSQUEDA WEB, NO HAY MUCHO PROBLEMA
-        
+
         # Limpiar la query removiendo palabras innecesarias
         cleaned_query = clean_search_query(search_query)
-        
+
         try:
             with st.spinner(f"Buscando: '{cleaned_query[:60]}...'"):
                 results = search_web(cleaned_query, limit=web_limit)
@@ -180,7 +191,7 @@ if user_input:
         else:
             # mostrar el query limpio que se usó
             expander_title = f"Resultados de búsqueda: '{cleaned_query[:50]}...'"
-            
+
             with st.expander(expander_title, expanded=True):
                 for i, r in enumerate(results, start=1):
                     st.markdown(f"**{i}. {r.get('title', 'Sin título')}**")
@@ -218,7 +229,7 @@ if user_input:
             "role": "system",
             "content": web_message
         })
-    
+
     # Construir mensajes del chat
     chat_messages = [{"role": "system", "content": SYSTEM_PROMPT}]
     chat_messages += st.session_state.messages

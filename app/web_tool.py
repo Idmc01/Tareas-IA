@@ -4,20 +4,20 @@ from ddgs import DDGS
 __all__ = ["search_web"]
 
 
-# realiza una búsqueda  en DuckDuckGo y devuelve resultados normalizados
+# realiza una búsqueda  en DuckDuckGo y devuelve resultados 
 def search_web(query: str, limit: int = 5) -> List[Dict[str, str]]:
- 
+
     #comprobar si DDGS está disponible
     if DDGS is None:
         raise RuntimeError(
             "'ddgs' no está instalado"
         )
 
-    # validar parámetros
+    # validar params
     if not isinstance(query, str) or not query.strip():
         raise ValueError("la consulta 'query' debe ser una cadena no vacía")
 
-    # limitar el número de resultados
+    # limitar el num de resultados
     if not isinstance(limit, int) or limit < 1 or limit >= 11:
         raise ValueError("el parámetro 'limit' debe ser un entero entre 1 y 10")
 
@@ -30,7 +30,7 @@ def search_web(query: str, limit: int = 5) -> List[Dict[str, str]]:
     if not results:
         return []
 
-    # normalizar resultados
+    # dar resultados
     out: List[Dict[str, str]] = []
     for r in results:
         out.append({
