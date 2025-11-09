@@ -6,7 +6,6 @@ from typing import List, Dict
 
 from tools.rag import load_index_and_df, retrieve_from_index
 
-#----- intentar cargar .env
 try:
     from dotenv import load_dotenv, find_dotenv
     load_dotenv(find_dotenv())
@@ -14,11 +13,9 @@ except Exception:
     print("No se pudo cargar el archivo .env!")
 
 
-#----- Configuración de la página
 st.set_page_config(page_title="Agente IA", page_icon="")
-st.title("Asistente de Inteligencia Artificial - TEC")
+st.title("ChatMMI")
 
-#----- leer API_KEY desde .env
 API_KEY = os.getenv("API_KEY")
 if not API_KEY:
     st.sidebar.error("Falta API_KEY!")
@@ -27,7 +24,6 @@ if not API_KEY:
 client = OpenAI(api_key=API_KEY, base_url="https://api.openai.com/v1")
 
 
-#----- probar conexión con OpenAI
 try:
     models = client.models.list()
     st.sidebar.success("Conexión con OpenAI establecida")
@@ -35,16 +31,21 @@ except Exception as e:
     st.sidebar.error(f"Error de conexión: {str(e)}")
     st.stop()
 
-#----- prompt del sistema
 SYSTEM_PROMPT = """
-Eres un asistente académico llamado AIDA, especializado en Inteligencia Artificial.
+Eres un asistente académico llamado Astra, especializado en Inteligencia Artificial.
 Tu tarea es responder preguntas sobre Inteligencia Artificial y temas relacionados.
-Debes responder siempre de manera clara y con tono docente.
-Si no tienes información suficiente para responder una pregunta, indícalo honestamente.
+Debes responder siempre de manera clara, directa y con tono formal.
+Si no tienes información suficiente para responder una pregunta, indícalo.
+Cuando la información solicitada exista en los apuntes o documentos disponibles, 
+debes basar tu respuesta en ellos e indicar el documento y autor de referencia. 
+Si no se encuentra información relevante en los apuntes, 
+debes indicarlo explícitamente antes de responder con tu conocimiento general, 
+manteniendo siempre la precisión y el tono académico.
+No debes utilizar herramientas de búsqueda en internet ni consultar fuentes externas,
+a menos que el usuario lo solicite de forma explícita.
 """
 
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-#----- Función para limpiar query de búsqueda
+
 def clean_search_query(query: str) -> str:
     # Limpia la query removiendo palabras comunes que no aportan a la búsqueda
     stopwords = [
@@ -73,11 +74,11 @@ def clean_search_query(query: str) -> str:
     
     return cleaned.strip()
 
-#----- Inicializar estado de la sesión
+#Inicializar estado de la sesión
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-#----- CONTROLES EN SIDEBAR
+#CONTROLES EN SIDEBAR
 st.sidebar.markdown("---")
 # RAG
 st.sidebar.subheader("RAG (Apuntes del curso)")
@@ -106,17 +107,16 @@ st.sidebar.subheader("Configuración de Búsqueda Web")
 use_web = st.sidebar.checkbox("Buscar en la web antes de responder", value=False)
 web_limit = st.sidebar.slider("Número de resultados web", min_value=1, max_value=10, value=3)
 
-#----- Mostrar mensajes anteriores
+#Mostrar mensajes anteriores
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
 
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #CONFIGURACION DEL WEB TOOL
 max_recent_web_context = 3  # número máximo de interacciones recientes para contexto web
 
-#----- Input del usuario
+#Input del usuario
 user_input = st.chat_input("Escribe tu pregunta...")
 
 if user_input:
