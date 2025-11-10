@@ -42,12 +42,10 @@ debes basar tu respuesta en ellos e indicar el documento y autor de referencia.
 Si no se encuentra información relevante en los apuntes, 
 debes indicarlo explícitamente antes de responder con tu conocimiento general, 
 manteniendo siempre la precisión y el tono académico.
-No debes utilizar herramientas de búsqueda en internet ni consultar fuentes externas,
-a menos que el usuario lo solicite de forma explícita.
 """
 import re
 def clean_search_query(query: str) -> str:
-    # Limpia la query removiendo palabras comunes que no aportan a la búsqueda
+    #lista de palabras y frases comunes a eliminar
     stopwords = [
         'dame', 'dime', 'que es', 'qué es', 'cual es', 'cuál es', 'como es', 'cómo es',
         'cuales son', 'cuáles son', 'como son', 'cómo son', 'me puedes', 'puedes',
@@ -63,7 +61,10 @@ def clean_search_query(query: str) -> str:
         'buenos dias','buenos días','saludos','estimado','dias','días','noches',"tardes",
         'estimado','queria','quería','quisiera saber','me gustaria saber',
         'me gustaría saber','podrias explicar','podrías explicar',
-        'podrias decirme','podrías decirme','podrias darme','podrías darme','ahora','busca'
+        'podrias decirme','podrías decirme','podrias darme','podrías darme','ahora','busca', '¿Que es', '¿Qué es', 
+        '¿Cual es', '¿Cuál es', '¿Como es', '¿Cómo es', '¿Cuales son', '¿Cuáles son', '¿Como son', '¿Cómo son', 
+        '¿Me puedes', '¿Puedes', '¿Explicame', '¿Explícame', '¿Explica', '¿Dime sobre', '¿Dame información', 
+        '¿Quiero saber', '¿Necesito saber'
     ]
 
     query_lower = query.lower()
@@ -91,7 +92,7 @@ if "messages" not in st.session_state:
 
 #CONTROLES EN SIDEBAR
 st.sidebar.markdown("---")
-# RAG
+#RAG
 st.sidebar.subheader("RAG (Apuntes del curso)")
 rag_enabled = st.sidebar.checkbox("Usar RAG con base vectorial", value=True)
 rag_strategy_label = st.sidebar.radio(
@@ -103,9 +104,9 @@ rag_strategy_label = st.sidebar.radio(
 rag_strategy = "sliding" if rag_strategy_label.startswith("Sliding") else "recursive"
 rag_k = st.sidebar.slider("Resultados RAG (k)", min_value=1, max_value=10, value=5, disabled=not rag_enabled)
 
-# Intento de precarga para informar estado
+#intento de precarga para informar estado
 
-# Precarga para informar estado
+#precarga para informar estado
 if rag_enabled:
     try:
         idx_tmp, df_tmp, text_col_tmp, meta_tmp = load_index_and_df(rag_strategy)
@@ -127,11 +128,11 @@ for msg in st.session_state.messages:
 #CONFIGURACION DEL WEB TOOL
 max_recent_web_context = 3  # número máximo de interacciones recientes para contexto web
 
-#Input del usuario
+#input del usuario
 user_input = st.chat_input("Escribe tu pregunta...")
 
 if user_input:
-    # Mostrar mensaje del usuario
+    #mostrar mensaje del usuario
     st.chat_message("user").markdown(user_input)
     st.session_state.messages.append({"role": "user", "content": user_input})
 
@@ -157,7 +158,7 @@ if user_input:
                     st.markdown(r["preview"])
                     st.markdown("---")
 
-    # Buscar en la web si está activado
+    #buscar en la web si está activado
     if use_web:
         # construir query contextualizada -> si hay historial web reciente -> agregar contexto
         search_query = user_input
@@ -172,7 +173,7 @@ if user_input:
                 # combinar contexto reciente con la pregunta actual
                 search_query = f"{' '.join(recent_context[-max_recent_web_context:])} {user_input}" #ESTO HACE QUE SE DUPLIQUE LA ULTIMA PREGUNTA EN LA BUSQUEDA WEB, NO HAY MUCHO PROBLEMA
 
-        # Limpiar la query removiendo palabras innecesarias
+        #limpiar la query removiendo palabras innecesarias
         cleaned_query = clean_search_query(search_query)
 
         try:
@@ -201,7 +202,7 @@ if user_input:
                         st.markdown(f"[{r.get('url')}]({r.get('url')})")
                     st.markdown("---")
 
-            # Construir contexto para el modelo
+            #construir contexto para el modelo
             lines = []
             for i, r in enumerate(results, start=1):
                 title = r.get('title', '')
@@ -210,7 +211,7 @@ if user_input:
                 lines.append(f"{i}. {title}\n{snippet}\nFuente: {url}\n")
             web_context = "\n".join(lines)
 
-    # Construir mensajes del chat
+    #construir mensajes del chat
     chat_messages = [{"role": "system", "content": SYSTEM_PROMPT}]
 
     if rag_context:
@@ -230,7 +231,7 @@ if user_input:
             "content": web_message
         })
 
-    # Construir mensajes del chat
+    #construir mensajes del chat
     chat_messages = [{"role": "system", "content": SYSTEM_PROMPT}]
     chat_messages += st.session_state.messages
 
@@ -247,7 +248,7 @@ if user_input:
                 st.markdown(response_content)
                 st.session_state.messages.append({"role": "assistant", "content": response_content})
 
-                # Mostrar fuentes RAG debajo (si existen)
+                #mostrar fuentes RAG debajo 
                 if rag_sources:
                     st.markdown("\n**Fuentes citadas (RAG):**")
                     for r in rag_sources:
