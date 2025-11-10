@@ -42,8 +42,6 @@ debes basar tu respuesta en ellos e indicar el documento y autor de referencia.
 Si no se encuentra información relevante en los apuntes, 
 debes indicarlo explícitamente antes de responder con tu conocimiento general, 
 manteniendo siempre la precisión y el tono académico.
-No debes utilizar herramientas de búsqueda en internet ni consultar fuentes externas,
-a menos que el usuario lo solicite de forma explícita.
 """
 import re
 def clean_search_query(query: str) -> str:
