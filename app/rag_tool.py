@@ -7,8 +7,8 @@ from typing import List, Dict, Tuple
 from openai import OpenAI
 from pathlib import Path
 
+#detecta la raíz del proyecto y las carpetas data/ y vectordb/
 def get_project_paths() -> Tuple[str, str, str]:
-    #Detecta la raíz del proyecto buscando 'vectordb' o 'data' hacia arriba
     here = Path(__file__).resolve()
     for parent in here.parents:
         if (parent / "vectordb").exists() or (parent / "data").exists():
@@ -16,10 +16,9 @@ def get_project_paths() -> Tuple[str, str, str]:
     fallback = here.parent.parent.parent
     return str(fallback), str(fallback / "data"), str(fallback / "vectordb")
 
+
+#esto carga el indice FAISS y el DataFrame (ya sea sliding o recursive)
 def load_index_and_df(strategy: str):
-    """Carga el índice FAISS y el DataFrame de chunks según la estrategia.
-    strategy in {"sliding", "recursive"}
-    """
     base_dir, data_dir, vectordb_dir = get_project_paths()
     if strategy == "sliding":
         index_path = os.path.join(vectordb_dir, "faiss_index_sliding.bin")
@@ -33,7 +32,6 @@ def load_index_and_df(strategy: str):
         meta_name = "faiss_index_recursive_metadata.json"
 
     index = faiss.read_index(index_path)
-    # Preferir pyarrow (ya instalado por Streamlit), fallback a fastparquet
     try:
         df = pd.read_parquet(df_path, engine="pyarrow")
     except Exception:
@@ -49,27 +47,24 @@ def load_index_and_df(strategy: str):
 
     return index, df, text_col, metadata
 
-
+#generar embedding normalizado para la query
 def embed_query(client: OpenAI, text: str) -> np.ndarray:
-    """Genera embedding normalizado L2 para la query."""
     resp = client.embeddings.create(model="text-embedding-3-small", input=[text])
     emb = np.array([resp.data[0].embedding], dtype=np.float32)
-    # normalizar L2 (los índices fueron creados con vectores normalizados)
+    # normalizar L2 (RECORDAR QUE los indices fueron creados con vectores normalizados)
     norms = np.linalg.norm(emb, axis=1, keepdims=True)
     emb = emb / np.clip(norms, 1e-12, None)
     return emb
 
 
+#funcion que busca top-k chunks en el indice seleccionado -> construye contexto 
+#return (resultados, contexto_etiquetado)
 def retrieve_from_index(
     client: OpenAI,
     query: str,
     strategy: str,
     k: int = 5,
 ) -> Tuple[List[Dict], str]:
-    """
-    Busca top-k chunks en el índice seleccionado y construye contexto con etiquetas [n].
-    Retorna (resultados, contexto_etiquetado)
-    """
     index, df, text_col, metadata = load_index_and_df(strategy)
     q_emb = embed_query(client, query)
     distances, indices = index.search(q_emb, k)
