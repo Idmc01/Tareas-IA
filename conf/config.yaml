@@ -1,0 +1,21 @@
+defaults:
+  - model: ae
+  - trainer: default
+  - logger: wandb
+
+dataset:
+  root: mvtec_rgb128
+  class_name: cable
+  img_size: 128
+  batch_size: 32
+
+model:
+  z_dim: 128
+
+train:
+  lr: 1e-3
+  epochs: 20
+
+loss:
+  type: l1     
+  alpha: 0.5

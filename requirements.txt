@@ -1,0 +1,14 @@
+torch>=2.0
+torchvision
+pytorch-lightning>=2.0
+hydra-core>=1.2
+wandb
+opencv-python
+pillow
+tqdm
+scikit-learn
+pytorch-msssim 
+matplotlib
+seaborn
+numpy
+python-dotenv

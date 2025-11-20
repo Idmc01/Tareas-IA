@@ -1,0 +1,7 @@
+mvtec_rgb128/
+__pycache__/
+.env
+.vscode/
+outputs/
+wandb/
+tarea05/
