@@ -1,3 +1,4 @@
 max_epochs: ${train.epochs}
 log_every_n_steps: 20
-gpus: 0        # 1 para GPU
+accelerator: gpu
+devices: 1

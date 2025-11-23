@@ -7,31 +7,23 @@ from pytorch_lightning.loggers import WandbLogger
 
 from data import MVTecDataset
 from models.ae import ClassicAE
+from models.unet import UNetAE
 from lightning_module import LitAE
 
 
 @hydra.main(config_path="../conf", config_name="config", version_base=None)
 def main(cfg: DictConfig):
 
-    # ----------------------
-    # LOGGER (WandB)
-    # ----------------------
     wandb_logger = WandbLogger(
         project=cfg.logger.project,
         entity=cfg.logger.entity,
         log_model=cfg.logger.log_model
     )
 
-    # ----------------------
-    # TRANSFORMS
-    # ----------------------
     transform = transforms.Compose([
         transforms.ToTensor()
     ])
 
-    # ----------------------
-    # DATASETS Y LOADERS
-    # ----------------------
     train_ds = MVTecDataset(
         root_dir=cfg.dataset.root,
         split="train",
@@ -60,10 +52,13 @@ def main(cfg: DictConfig):
         num_workers=4
     )
 
-    # ----------------------
-    # MODELO
-    # ----------------------
-    model = ClassicAE(z_dim=cfg.model.z_dim)
+    # Seleccionar modelo segun configuracion
+    if cfg.model.name == "ae":
+        model = ClassicAE(z_dim=cfg.model.z_dim)
+    elif cfg.model.name == "unet":
+        model = UNetAE(z_dim=cfg.model.z_dim)
+    else:
+        raise ValueError(f"Modelo desconocido: {cfg.model.name}")
 
     lit_model = LitAE(
         model=model,
@@ -72,18 +67,14 @@ def main(cfg: DictConfig):
         alpha=cfg.loss.alpha
     )
 
-    # ----------------------
-    # TRAINER
-    # ----------------------
     trainer = Trainer(
         max_epochs=cfg.trainer.max_epochs,
+        accelerator=cfg.trainer.accelerator,
+        devices=cfg.trainer.devices,
         logger=wandb_logger,
         log_every_n_steps=cfg.trainer.log_every_n_steps
     )
 
-    # ----------------------
-    # ENTRENAR
-    # ----------------------
     trainer.fit(lit_model, train_loader, val_loader)
 
 

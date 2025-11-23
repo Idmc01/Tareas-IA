@@ -1,7 +1,50 @@
+# Dataset (imágenes procesadas)
 mvtec_rgb128/
+
+# Python
 __pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Entorno
 .env
+.venv/
+venv/
+ENV/
+
+# IDE
 .vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Outputs de entrenamiento
 outputs/
-wandb/
 tarea05/
+
+# WandB
+wandb/
+artifacts/
+
+# Archivos temporales
+temp_tsne/
+*.tmp
+*.log
+histogram_code.py
+
+# Jupyter
+.ipynb_checkpoints/
+*-checkpoint.ipynb
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini

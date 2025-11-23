@@ -5,7 +5,7 @@ defaults:
 
 dataset:
   root: mvtec_rgb128
-  class_name: cable
+  class_name: ["cable", "capsule", "screw", "transistor"]
   img_size: 128
   batch_size: 32
 
@@ -17,5 +17,6 @@ train:
   epochs: 20
 
 loss:
-  type: l1     
+  types: ["l1", "l2", "ssim", "ssim_l1"]
+  type: l1
   alpha: 0.5
