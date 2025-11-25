@@ -1,22 +1,18 @@
 defaults:
-  - model: ae
+  - model: cnn_scratch
   - trainer: default
   - logger: wandb
 
 dataset:
   root: mvtec_rgb128
-  class_name: ["cable", "capsule", "screw", "transistor"]
+  class_name: ["bottle", "cable", "capsule", "grid", "pill", "screw", "tile", "toothbrush", "transistor", "zipper"]
   img_size: 128
   batch_size: 32
+  num_classes: 2  # good vs defect (binario)
 
 model:
-  z_dim: 128
+  num_classes: ${dataset.num_classes}
 
 train:
   lr: 1e-3
   epochs: 20
-
-loss:
-  types: ["l1", "l2", "ssim", "ssim_l1"]
-  type: l1
-  alpha: 0.5

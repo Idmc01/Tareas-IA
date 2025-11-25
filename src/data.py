@@ -7,15 +7,15 @@ class MVTecDataset(Dataset):
         self.paths = []
         self.labels = []
         self.defect_names = []
-
+        
         # Compatibilidad: si viene un string, convertir a lista
         if isinstance(class_name, str):
             class_name = [class_name]
-
+        
         # Iterar sobre todas las clases
         for cls in class_name:
             base = os.path.join(root_dir, cls, split)
-
+            
             # --- ENTRENAMIENTO: solo good ---
             if split == "train":
                 good_path = os.path.join(base, "good")
@@ -24,7 +24,7 @@ class MVTecDataset(Dataset):
                         self.paths.append(os.path.join(good_path, f))
                         self.labels.append(0)  # 0 = good
                         self.defect_names.append("good")
-
+            
             # --- TEST/VALIDATION: good + TODOS los defectos ---
             else:
                 for subclass in os.listdir(base):
