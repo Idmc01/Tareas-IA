@@ -2,3 +2,4 @@ max_epochs: ${train.epochs}
 log_every_n_steps: 20
 accelerator: gpu
 devices: 1
+precision: 16-mixed

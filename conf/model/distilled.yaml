@@ -1,4 +1,4 @@
-name: cnn_scratch
+name: distilled
 type: classifier
 num_classes: ${dataset.num_classes}
 
@@ -10,6 +10,12 @@ architecture:
 classifier:
   hidden_dim: 64
   dropout: 0.3
+
+distillation:
+  teacher_model: resnet18
+  teacher_pretrained: true
+  temperature: 4.0
+  alpha: 0.7
 
 training:
   optimizer: adamw

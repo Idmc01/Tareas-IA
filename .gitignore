@@ -28,7 +28,7 @@ ENV/
 
 # Outputs de entrenamiento
 outputs/
-tarea05/
+Proyecto2/
 
 # WandB
 wandb/

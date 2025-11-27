@@ -4,15 +4,12 @@ defaults:
   - logger: wandb
 
 dataset:
-  root: mvtec_rgb128
+  root: data
   class_name: ["bottle", "cable", "capsule", "grid", "pill", "screw", "tile", "toothbrush", "transistor", "zipper"]
   img_size: 128
   batch_size: 32
-  num_classes: 2  # good vs defect (binario)
-
-model:
-  num_classes: ${dataset.num_classes}
+  num_classes: 2
 
 train:
   lr: 1e-3
-  epochs: 20
+  epochs: 50
