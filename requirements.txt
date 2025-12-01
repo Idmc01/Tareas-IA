@@ -11,4 +11,5 @@ pytorch-msssim
 matplotlib
 seaborn
 numpy
+pandas
 python-dotenv
