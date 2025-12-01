@@ -9,9 +9,9 @@ from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
 import sys
 sys.path.append('src')
 
-from data import MVTecDataset
+from LightningDataModule import MVTecDataset
 from models.unet_autoencoder import UNetAE
-from lightning_autoencoder import LitAE
+from LightningModelC import LitAE
 
 
 @hydra.main(config_path="conf", config_name="config", version_base=None)

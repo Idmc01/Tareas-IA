@@ -1,6 +1,5 @@
 name: cnn_scratch
 type: classifier
-num_classes: ${dataset.num_classes}
 
 architecture:
   base: resnet18_partial

@@ -9,10 +9,10 @@ from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
 import sys
 sys.path.append('src')
 
-from data import MVTecDataset
+from LightningDataModule import MVTecDataset
 from models.resnet_partial import ResNet18PartialDistilled
 from models.teacher import TeacherModel
-from lightning_distilled import LitDistilledClassifier
+from LightningModuleB import LitDistilledClassifier
 
 
 @hydra.main(config_path="conf", config_name="config", version_base=None)
