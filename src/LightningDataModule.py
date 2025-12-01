@@ -112,8 +112,12 @@ class MVTecDataModule(pl.LightningDataModule):
             ]
         else:
             aug = []
-
-        t = [transforms.Resize((self.img_size, self.img_size))]
+        
+        if self.model_type == "autoencoder":
+            resize_size = 128
+        else:
+            resize_size = self.img_size
+        t = [transforms.Resize((resize_size, resize_size))]
         t.extend(aug)
         t.append(transforms.ToTensor())
         t.append(

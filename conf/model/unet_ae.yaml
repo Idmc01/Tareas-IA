@@ -3,23 +3,9 @@ type: autoencoder
 
 architecture:
   base: unet
-  in_channels: 3
-  base_channels: 64
-  depth: 4
-
-latent:
-  dim: 256
-  use_bottleneck: true
-
-reconstruction:
-  loss: mse
-  perceptual_weight: 0.0
-  use_ssim: false
+  z_dim: 128   
 
 training:
   optimizer: adam
-  lr: 1e-4
-  weight_decay: 1e-5
-  scheduler: step
-  scheduler_step: 20
-  scheduler_gamma: 0.5
+  lr: ${train.lr}
+  loss_type: l2
