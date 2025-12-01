@@ -1,8 +1,14 @@
 defaults:
   - model: cnn_scratch
   - trainer: default
-  - logger: wandb
   - _self_
+
+logger:
+  wandb:
+    project: "Proyecto-2"
+    entity: "mauu-tec"
+    log_model: true
+    name: "default_run"
 
 dataset:
   root: data

@@ -1,3 +1,4 @@
-project: Proyecto-2
-entity: mauu-tec
+project: "Proyecto-2"
+entity: "mauu-tec"
 log_model: true
+name: "default_run"

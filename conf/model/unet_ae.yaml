@@ -3,9 +3,13 @@ type: autoencoder
 
 architecture:
   base: unet
-  z_dim: 128   
+
+latent:
+  dim: 128
+
+reconstruction:
+  loss: l2
 
 training:
   optimizer: adam
   lr: ${train.lr}
-  loss_type: l2

@@ -1,4 +1,12 @@
+import os
+import sys
+
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+
+import hydra
+from omegaconf import DictConfig
 import pytorch_lightning as pl
+
 from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.callbacks import EarlyStopping, ModelCheckpoint
 
@@ -9,85 +17,76 @@ from src.models.teacher_loader import load_teacher_resnet18
 from src.callbacks.save_embeddings import SaveEmbeddingsCallback
 
 import wandb
+import hydra.utils as hy_utils
 
 
-def train_model_b(
-    lr: float,
-    batch_size: int,
-    epochs: int,
-    embedding_dim: int,
-    hidden_dim: int,
-    run_name: str,
-    dropout: float = 0.3,
-    weight_decay: float = 1e-4,
-    temperature: float = 4.0,
-    alpha: float = 0.7,
-):
+@hydra.main(config_path="../conf", config_name="config", version_base=None)
+def main(cfg: DictConfig):
+
+    original_cwd = hy_utils.get_original_cwd()
+    os.chdir(original_cwd)
 
     datamodule = MVTecDataModule(
-        root_dir="data",
-        class_name=[
-            "bottle", "cable", "capsule", "grid", "pill",
-            "screw", "tile", "toothbrush", "transistor", "zipper"
-        ],
-        img_size=224,
-        batch_size=batch_size,
+        root_dir=cfg.dataset.root,
+        class_name=cfg.dataset.class_name,
+        img_size=cfg.dataset.img_size,
+        batch_size=cfg.dataset.batch_size,
         num_workers=4,
         model_type="classifier",
     )
 
     student_backbone = build_resnet18_partial(
-        layers=["conv1", "conv2_x", "conv3_x"],
-        embedding_dim=embedding_dim,
-        num_classes=10,
-        hidden_dim=hidden_dim,
-        dropout=dropout,
+        layers=cfg.model.architecture.layers,
+        embedding_dim=cfg.model.architecture.features_dim,
+        num_classes=cfg.dataset.num_classes,
+        hidden_dim=cfg.model.classifier.hidden_dim,
+        dropout=cfg.model.classifier.dropout,
     )
 
-    teacher_model = load_teacher_resnet18(num_classes=10)
+    teacher_model = load_teacher_resnet18(num_classes=cfg.dataset.num_classes)
 
     lit_model = LitDistilledClassifier(
         student_model=student_backbone,
         teacher_model=teacher_model,
-        lr=lr,
-        weight_decay=weight_decay,
-        temperature=temperature,
-        alpha=alpha,
+        lr=cfg.train.lr,
+        weight_decay=cfg.model.training.weight_decay,
+        temperature=cfg.model.distillation.temperature,
+        alpha=cfg.model.distillation.alpha,
     )
 
     wandb_logger = WandbLogger(
-        project="Proyecto-II",
-        name=run_name,
-        log_model=True
+        project=cfg.logger.wandb.project,
+        name=cfg.logger.wandb.name,
+        log_model=True,
     )
 
     early_stop = EarlyStopping(
         monitor="val/loss",
-        patience=10,
-        mode="min"
+        patience=cfg.trainer.callbacks.early_stopping.patience,
+        mode=cfg.trainer.callbacks.early_stopping.mode,
     )
 
     checkpoint = ModelCheckpoint(
         monitor="val/loss",
         mode="min",
         save_top_k=1,
-        filename=f"{run_name}-best-{{epoch:02d}}-{{val_loss:.4f}}"
+        filename="modelB-best-{epoch:02d}-{val_loss:.4f}",
     )
 
     emb_callback = SaveEmbeddingsCallback(
         output_dir="embeddings",
-        run_name=run_name,
+        run_name=cfg.logger.wandb.name,
         split="train",
     )
 
     trainer = pl.Trainer(
-        max_epochs=epochs,
-        accelerator="gpu",
-        devices=1,
-        precision="16-mixed",
+        max_epochs=cfg.trainer.max_epochs,
+        accelerator=cfg.trainer.accelerator,
+        devices=cfg.trainer.devices,
+        precision=cfg.trainer.precision,
         logger=wandb_logger,
         callbacks=[early_stop, checkpoint, emb_callback],
-        log_every_n_steps=20,
+        log_every_n_steps=cfg.trainer.log_every_n_steps,
     )
 
     trainer.fit(lit_model, datamodule=datamodule)
@@ -96,7 +95,6 @@ def train_model_b(
     emb_callback.split = "train"
     trainer.predict(lit_model, dataloaders=datamodule.train_dataloader())
 
-    datamodule.setup("fit")
     emb_callback.split = "val"
     trainer.predict(lit_model, dataloaders=datamodule.val_dataloader())
 
@@ -105,5 +103,8 @@ def train_model_b(
     trainer.predict(lit_model, dataloaders=datamodule.test_dataloader())
 
     wandb.finish()
+    return lit_model
 
-    return lit_model, trainer
+
+if __name__ == "__main__":
+    main()
