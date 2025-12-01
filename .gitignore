@@ -29,6 +29,7 @@ ENV/
 # Outputs de entrenamiento
 outputs/
 Proyecto2/
+Proyecto-II/
 
 # WandB
 wandb/
