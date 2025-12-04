@@ -25,8 +25,8 @@ class ResNet18Partial(nn.Module):
             ),
             "conv2_x": base_model.layer1,
             "conv3_x": base_model.layer2,
-            "conv4_x": base_model.layer3,  # not used unless you enable it
-            "conv5_x": base_model.layer4,  # not used unless you enable it
+            "conv4_x": base_model.layer3,  
+            "conv5_x": base_model.layer4,  
         }
 
         selected = []
